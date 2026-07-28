@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-   <html lang="en">
-   <head>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRM Platform</title>
@@ -480,7 +480,12 @@ async function renderCompanies(){
     </table></div>
     ${modalShell('companyModal','New Company', companyFormHtml())}
   `;
-  document.getElementById('newCompanyBtn').onclick = ()=> openModal('companyModal');
+  document.getElementById('newCompanyBtn').onclick = ()=> {
+    openModal('companyModal');
+    populateMasterDropdown('f_country', 'country_master');
+    populateStateDropdown('f_state', '');
+    document.getElementById('f_country').onchange = (e)=> populateStateDropdown('f_state', e.target.value);
+  };
   const { data, error } = await supa.from('company_master').select('*').order('created_at',{ascending:false});
   const rows = document.getElementById('companyRows');
   if(error || !data || !data.length){
@@ -1048,6 +1053,18 @@ async function populateMasterDropdown(selectId, table, labelField='name'){
   const select = document.getElementById(selectId); if(!select) return;
   const { data, error } = await supa.from(table).select('*'); if(error || !data) return;
   data.forEach(row=>{ const opt = document.createElement('option'); opt.value = row.id; opt.textContent = row[labelField] || row.name; select.appendChild(opt); });
+}
+
+// State depends on Country (state_master.country_id) — repopulate whenever
+// the Country dropdown changes, instead of showing every state up front.
+async function populateStateDropdown(selectId, countryId){
+  const select = document.getElementById(selectId); if(!select) return;
+  select.innerHTML = '<option value="">— Select country first —</option>';
+  if(!countryId) return;
+  const { data, error } = await supa.from('state_master').select('*').eq('country_id', countryId);
+  if(error || !data) return;
+  select.innerHTML = '';
+  data.forEach(row=>{ const opt = document.createElement('option'); opt.value = row.id; opt.textContent = row.name; select.appendChild(opt); });
 }
 
 function viewCompany(id){ toast('Open company detail view for '+id); }
