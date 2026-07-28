@@ -1376,8 +1376,7 @@ async function deleteCustomField(id){
 // ============================================================================
 async function renderUsers(){
   const main = document.getElementById('main');
-  pageHeader(main, 'Users & Roles',
-    `Role hierarchy: User → Manager → Super Manager → Admin. A Manager sees their direct reports' records; a Super Manager sees every team below them.`,
+  pageHeader(main, 'Users & Roles', `Role hierarchy: User → Manager → Super Manager → Admin. A Manager sees their direct reports' records; a Super Manager sees every team below them.`,
     `<button class="btn small" id="inviteUserBtn">${icon('plus')}Invite User</button>`);
   main.insertAdjacentHTML('beforeend', `
     <div class="table-wrap"><table>
