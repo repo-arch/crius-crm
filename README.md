@@ -817,7 +817,8 @@ async function saveCompany(){
     domestic_export: document.getElementById('f_domestic_export').value,
     gst_no: document.getElementById('f_gst').value,
     address: document.getElementById('f_address').value,
-    company_code: 'C' + Date.now().toString().slice(-6)
+    company_code: 'C' + Date.now().toString().slice(-6),
+    created_by: currentUser.id
   };
   const { error } = await supa.from('company_master').insert(payload);
   if(error){ toast('Error: '+error.message); return; }
