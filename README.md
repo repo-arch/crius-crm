@@ -216,8 +216,8 @@
 // ============================================================================
 // 1. CONNECT TO YOUR SUPABASE PROJECT
 // ============================================================================
-const SUPABASE_URL = "https://ozhyjniulqxtcinrlqym.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96aHlqbml1bHF4dGNpbnJscXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMzUxMzcsImV4cCI6MjEwMDgxMTEzN30.sMW_H-nleTVKQdTev2XYD2F8jQwmVMpmEAYB4g4Wols";
+const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ============================================================================
 
@@ -329,10 +329,11 @@ async function loadCurrentUserAndEnter(){
   if(!sessionData?.user){ return; }
   let { data: profile, error } = await supa.from('app_users').select('*').eq('id', sessionData.user.id).single();
 
-  if((error || !profile) && sessionData.user.app_metadata?.provider === 'google'){
-    // First-time Google sign-in: create a starter profile from what Google gave us.
-    // Internal Company/Division are left blank — prompt the user (or an admin) to fill
-    // those in via Users & Roles rather than blocking login entirely.
+  if(error || !profile){
+    // No app_users row yet for this authenticated account — create a starter
+    // profile automatically (role always defaults to 'user') instead of
+    // blocking login. This covers manual signups where the insert step
+    // failed partway, password-reset logins, and Google sign-ins alike.
     const meta = sessionData.user.user_metadata || {};
     const insertPayload = {
       id: sessionData.user.id,
