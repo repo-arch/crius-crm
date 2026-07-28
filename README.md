@@ -820,8 +820,9 @@ async function saveCompany(){
     company_code: 'C' + Date.now().toString().slice(-6),
     created_by: currentUser.id
   };
-  console.log('PAYLOAD:', payload);   // ← add this
+  console.log('PAYLOAD:', payload);
   const { error } = await supa.from('company_master').insert(payload);
+  console.log('FULL ERROR:', error);
   if(error){ toast('Error: '+error.message); return; }
   toast('Company saved'); closeModal('companyModal'); renderCompanies();
 }
