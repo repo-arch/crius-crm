@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -62,15 +63,15 @@
     --subnav-h:44px;
   }
   *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{margin:0;font-family:'Inter',Arial,sans-serif;background:var(--canvas);color:var(--ink-900);font-size:13.5px;-webkit-font-smoothing:antialiased;}
+  html,body{height:100%;width:100%;}
+  body{margin:0;padding:0;font-family:'Inter',Arial,sans-serif;background:var(--canvas);color:var(--ink-900);font-size:13.5px;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
   code,.mono{font-family:'Roboto Mono',monospace;}
   h1,h2,h3{font-family:'Inter',Arial,sans-serif;letter-spacing:-.01em;}
   a{color:inherit;}
   ::selection{background:var(--brand-100);}
   ::-webkit-scrollbar{width:9px;height:9px;}
   ::-webkit-scrollbar-thumb{background:#D6DCE6;border-radius:20px;border:2px solid var(--canvas);}
-  #app{display:flex;height:100vh;}
+  #app{display:flex;width:100%;height:100vh;height:100dvh;}
   svg.icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;display:block;}
 
   /* ============================== SIDEBAR ============================== */
@@ -100,7 +101,7 @@
   .collapse-btn:hover{background:var(--sidebar-hi);color:#fff;}
 
   /* ============================== SHELL / TOPBAR ============================== */
-  #shell{flex:1;display:flex;flex-direction:column;min-width:0;}
+  #shell{flex:1 1 auto;width:100%;display:flex;flex-direction:column;min-width:0;}
   #topbar{height:var(--topbar-h);background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;gap:16px;}
   .topbar-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0;}
   .search-box{position:relative;max-width:420px;flex:1;}
@@ -1253,7 +1254,8 @@ async function saveContact(){
     designation: document.getElementById('ct_designation').value,
     email: document.getElementById('ct_email').value,
     phone: document.getElementById('ct_phone').value,
-    is_primary: document.getElementById('ct_primary').checked
+    is_primary: document.getElementById('ct_primary').checked,
+    created_by: currentUser.id
   };
   const { error } = await supa.from('contact_master').insert(payload);
   if(error){ toast('Error: '+error.message); return; }
