@@ -62,6 +62,7 @@
     --subnav-h:44px;
   }
   *{box-sizing:border-box;}
+  html{margin:0;padding:0;}
   html,body{height:100%;width:100%;}
   body{margin:0;padding:0;font-family:'Inter',Arial,sans-serif;background:var(--canvas);color:var(--ink-900);font-size:13.5px;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
   code,.mono{font-family:'Roboto Mono',monospace;}
@@ -1338,7 +1339,8 @@ async function saveLead(){
     division_id: document.getElementById('f_lead_division').value || null,
     source_id: document.getElementById('f_lead_source').value,
     query: document.getElementById('f_lead_query').value,
-    closure_status: 'open'
+    closure_status: 'open',
+    created_by: currentUser.id
   };
   const { error } = await supa.from('leads').insert(payload);
   if(error){ toast('Error: '+error.message); return; }
@@ -1452,6 +1454,7 @@ function addProductLine(){
         <div class="form-group"><label class="required">Source</label><select id="pl_source_${idx}"></select></div>
         <div class="form-group"><label class="required">SF (Product)</label>
           <select id="pl_sf_${idx}"><option value="__new__">+ New SF (generate code)</option></select></div>
+        <div class="form-group" id="pl_newsf_wrap_${idx}"><label class="required">New SF Name</label><input id="pl_newsf_name_${idx}" placeholder="e.g. Vitamin C 500mg Tablets"></div>
         <div class="form-group"><label>Dosage Form</label><select id="pl_dosage_${idx}"></select></div>
         <div class="form-group"><label>Enquiry Qty</label><input type="number" id="pl_qty_${idx}"></div>
         <div class="form-group"><label>Qty Unit</label><select id="pl_qtyunit_${idx}"></select></div>
@@ -1474,6 +1477,9 @@ function addProductLine(){
     document.getElementById(`pl_po_block_${idx}`).style.display = e.target.value==='P.O. Raised' ? 'block':'none';
     document.getElementById(`pl_lost_block_${idx}`).style.display = e.target.value==='Order Lost' ? 'block':'none';
   });
+  document.getElementById(`pl_sf_${idx}`).addEventListener('change',(e)=>{
+    document.getElementById(`pl_newsf_wrap_${idx}`).style.display = e.target.value==='__new__' ? 'flex':'none';
+  });
   populateMasterDropdown(`pl_internal_company_${idx}`, 'internal_company_master');
   populateMasterDropdown(`pl_source_${idx}`, 'source_master');
   populateMasterDropdown(`pl_sf_${idx}`, 'sf_master', 'sf_name', true);
@@ -1482,15 +1488,28 @@ function addProductLine(){
 }
 async function saveEnquiry(){
   const lines = document.querySelectorAll('.product-line'); const inserts = [];
-  lines.forEach(line=>{
+  for(const line of lines){
     const idx = line.dataset.idx;
     const stage = document.getElementById(`pl_stage_${idx}`).value;
     const tagsRaw = document.getElementById(`pl_tags_${idx}`).value.trim();
+    let sfId = document.getElementById(`pl_sf_${idx}`).value;
+    if(sfId === '__new__'){
+      const newName = document.getElementById(`pl_newsf_name_${idx}`).value.trim();
+      if(!newName){ toast('Enter a name for the new SF product on line '+idx); return; }
+      const { data: sfRow, error: sfErr } = await supa.from('sf_master').insert({
+        sf_code: 'SF' + Date.now().toString().slice(-6) + idx,
+        sf_name: newName,
+        status: 'new',
+        created_by: currentUser?.id
+      }).select().single();
+      if(sfErr){ toast('Error creating SF product: '+sfErr.message); return; }
+      sfId = sfRow.id;
+    }
     inserts.push({
       enquiry_no: 'E' + Date.now().toString().slice(-6) + '-' + idx,
       internal_company_id: document.getElementById(`pl_internal_company_${idx}`).value,
       source_id: document.getElementById(`pl_source_${idx}`).value,
-      sf_id: document.getElementById(`pl_sf_${idx}`).value,
+      sf_id: sfId,
       dosage_form_id: document.getElementById(`pl_dosage_${idx}`).value || null,
       enquiry_qty: parseFloat(document.getElementById(`pl_qty_${idx}`).value) || null,
       qty_unit_id: document.getElementById(`pl_qtyunit_${idx}`).value || null,
@@ -1501,9 +1520,10 @@ async function saveEnquiry(){
       tags: tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : null,
       po_qty: parseFloat(document.getElementById(`pl_po_qty_${idx}`)?.value) || null,
       po_rate: parseFloat(document.getElementById(`pl_po_rate_${idx}`)?.value) || null,
-      order_lost_reason: document.getElementById(`pl_lost_reason_${idx}`)?.value || null
+      order_lost_reason: document.getElementById(`pl_lost_reason_${idx}`)?.value || null,
+      created_by: currentUser?.id
     });
-  });
+  }
   const { error } = await supa.from('enquiries').insert(inserts);
   if(error){ toast('Error: '+error.message); return; }
   toast(`${inserts.length} deal line(s) saved`); closeModal('enquiryModal'); loadEnquiryData();
